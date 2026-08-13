@@ -1,0 +1,40 @@
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA, FactorAnalysis, FastICA
+from sklearn.mixture import GaussianMixture
+from sklearn.metrics import silhouette_score
+
+# Load dataset
+df = pd.read_csv("wine_samples.csv")
+
+print("Original Dataset:")
+print(df)
+
+# Remove Sample column
+X = df.drop("Sample", axis=1)
+# Standardize the data
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+fa = FactorAnalysis(n_components=2, random_state=42)
+X_fa = fa.fit_transform(X_scaled)
+ica = FastICA(n_components=2, random_state=42, max_iter=1000)
+X_ica = ica.fit_transform(X_scaled)
+def gmm_cluster(data, name):
+    gmm = GaussianMixture(n_components=3, random_state=42)
+    labels = gmm.fit_predict(data)
+    score = silhouette_score(data, labels)
+    print("\n" + name)
+    print("Clusters:", labels + 1)
+    print("Silhouette Score:", round(score, 3))
+gmm_cluster(X_pca, "PCA + GMM")
+gmm_cluster(X_fa, "Factor Analysis + GMM")
+gmm_cluster(X_ica, "ICA + GMM")
+
+
+print("\nPCA Explained Variance:")
+print(pca.explained_variance_ratio_)
+
+print("\nTotal Variance Explained:",
+      round(sum(pca.explained_variance_ratio_) * 100, 2), "%")
